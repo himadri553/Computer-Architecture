@@ -33,10 +33,14 @@ int main () {
     while (fgets(native4_line, sizeof(native4_line), fp_naive4)) {
         /*
             TODO:
-            - add logic to determine hit or miss
+            - For each line, store address (# after R/W)
+            - Compute block number = address // 2
+            - get cache type
+            - use chache type to determine where block can go:
+                - Direct mapped chache: 
+
             - counter for misses and hits for table
         */
-       // Get block number, 
     }
 
     // smart4 simulation
