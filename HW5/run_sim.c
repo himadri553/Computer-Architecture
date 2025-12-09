@@ -16,13 +16,7 @@
 */
 #include <stdio.h>
 #include <stdbool.h>
-
-// Cache struct - access each line like this: my_cache.valid[line_to_access]
-#define CACHE_LINES 8
-typedef struct {
-    int valid[CACHE_LINES];
-    int tag[CACHE_LINES];
-} DM_Cache;
+#include "hw5.h"
 
 int run_sim(const char *cache_map_type, const char *trace_filepath) {
     // Initalize counters, check cache type and get file
@@ -32,7 +26,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
 
     // Initalize cache and other vars for simulation
     DM_Cache my_cache;
-    for (int i = 0; i < CACHE_LINES; i++) {
+    for (int i = 0; i < DM_CACHE_LINES; i++) {
         my_cache.valid[i] = 0;
         my_cache.tag[i] = -1;
     }
@@ -48,8 +42,8 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
         int addr;
         sscanf(trace_line, " %c: %d", &op, &addr);
         int block_number = addr / 2;
-        int index = block_number % CACHE_LINES;         
-        int tag = block_number / CACHE_LINES;
+        int index = block_number % DM_CACHE_LINES;         
+        int tag = block_number / DM_CACHE_LINES;
 
         // Determine Hit or Miss and update cache accordingly 
         if (my_cache.valid[index] == 1 && my_cache.tag[index] == tag) {
