@@ -12,8 +12,6 @@
 #include <stdbool.h>
 
 /* Global */ 
-#define CACHE_LINES 8
-
 // Counters
 int counter_dm_native = 0;
 int counter_dm_smart = 0;
@@ -22,6 +20,8 @@ int counter_twoway_smart = 0;
 int counter_full_native = 0;
 int counter_full_smart = 0;
 
+// Cache struct - access each line like this: my_cache.valid[line_to_access]
+#define CACHE_LINES 8
 typedef struct {
     int valid[CACHE_LINES];
     int tag[CACHE_LINES];
