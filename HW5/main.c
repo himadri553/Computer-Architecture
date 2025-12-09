@@ -27,7 +27,7 @@ int main() {
 
     // Run all sims
     counter_dm_native = run_sim("dm", "./naive4-trace.txt");
-    printf("DM Native misses: %d\n", counter_dm_native);
+    counter_dm_smart = run_sim("dm", "./smart4-trace.txt");
 
     /* Display table */ 
     FILE *fp_results_table = fopen("hw5_results.txt", "w");
