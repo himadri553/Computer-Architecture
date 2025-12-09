@@ -22,7 +22,7 @@
 typedef struct {
     int valid[CACHE_LINES];
     int tag[CACHE_LINES];
-} Cache;
+} DM_Cache;
 
 int run_sim(const char *cache_map_type, const char *trace_filepath) {
     // Initalize counters, check cache type and get file
@@ -31,7 +31,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     FILE *fp_trace = fopen(trace_filepath, "r");
 
     // Initalize cache and other vars for simulation
-    Cache my_cache;
+    DM_Cache my_cache;
     for (int i = 0; i < CACHE_LINES; i++) {
         my_cache.valid[i] = 0;
         my_cache.tag[i] = -1;
@@ -43,8 +43,39 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     /* Run simulation */
     printf("Running simulation - %s", cache_map_type);
     while (fgets(trace_line, sizeof(trace_line), fp_trace)) {
-        
+        // DM - Compute vars
+        char op;
+        int addr;
+        sscanf(trace_line, " %c: %d", &op, &addr);
+        int block_number = addr / 2;
+        int index = block_number % CACHE_LINES;         
+        int tag = block_number / CACHE_LINES;
+
+        // Determine Hit or Miss and update cache accordingly 
+        if (my_cache.valid[index] == 1 && my_cache.tag[index] == tag) {
+            is_hit = true;
+        }
+        else {
+            is_hit = false;
+            miss_counter++;
+
+            my_cache.valid[index] = 1;
+            my_cache.tag[index] = tag;
+        }
+
+        // Access printout for debugging
+        access_num++;
+        printf("Access: %d, Block: %d, Index: %d, Tag: %d ", access_num, block_number, index, tag);
+        if (is_hit) {
+            printf("HIT");
+        }
+        else {
+            printf("MISS");
+        }
+        printf("\n");
     }
+    fclose(fp_trace);
 
     return miss_counter;
 }
+
