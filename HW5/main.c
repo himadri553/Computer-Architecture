@@ -21,18 +21,13 @@ int counter_twoway_smart = 0;
 int counter_full_native = 0;
 int counter_full_smart = 0;
 
-// Cache struct - access each line like this: my_cache.valid[line_to_access]
-#define CACHE_LINES 8
-typedef struct {
-    int valid[CACHE_LINES];
-    int tag[CACHE_LINES];
-} Cache;
-
 /* Main runner */
 int main() {
+    printf("HW5 - Cache Simulation\n");
+
     // Run all sims
+    counter_dm_native = run_sim("dm", "./naive4-trace.txt");
     printf("DM Native misses: %d\n", counter_dm_native);
-    counter_dm_native = run_sim("dm", "native4-trace.txt");
 
     /* Display table */ 
     FILE *fp_results_table = fopen("hw5_results.txt", "w");
@@ -54,6 +49,7 @@ int main() {
         "Fully-associative",
         counter_full_native,
         counter_full_smart); 
+    fclose(fp_results_table);
 
     return 0;
 }

@@ -9,7 +9,6 @@
     - used for each file and sim type in main
 
     TODO:
-    - Integrated this into main and show that it can work with dm for one file
     - add all cache types struct (or maybe make one that can be used for all?)
     - integrated all other types of sim_type (see hsahas_stuff/hs5_brainstorm.txt)
 
@@ -23,6 +22,10 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     int miss_counter = 0;
     // ...
     FILE *fp_trace = fopen(trace_filepath, "r");
+    if (!fp_trace) {
+        printf("ERROR: Cannot open trace file: %s\n", trace_filepath);
+        return -1;
+    }
 
     // Initalize cache and other vars for simulation
     DM_Cache my_cache;
@@ -35,7 +38,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     bool is_hit;
 
     /* Run simulation */
-    printf("Running simulation - %s", cache_map_type);
+    printf("Running simulation - %s\n", cache_map_type);
     while (fgets(trace_line, sizeof(trace_line), fp_trace)) {
         // DM - Compute vars
         char op;
