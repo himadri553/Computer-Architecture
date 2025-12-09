@@ -8,6 +8,10 @@
     - outputs # of misses
     - used for each file and sim type in main
 
+    sim_type logic:
+    |   Direct Mapped (DM)  |   Two-way set associative     |   Fully-associative
+    |
+
     TODO:
     - add all cache types struct (or maybe make one that can be used for all?)
     - integrated all other types of sim_type (see hsahas_stuff/hs5_brainstorm.txt)
@@ -20,7 +24,13 @@
 int run_sim(const char *cache_map_type, const char *trace_filepath) {
     // Initalize counters, check cache type and get file
     int miss_counter = 0;
-    // ...
+    if (cache_map_type == "dm", cache_map_type == "twoway", cache_map_type == "full") {
+        
+    }
+    else {
+        printf("ERROR: Unsupported cache mapping type: %s\n", cache_map_type);
+        return -1;
+    }
     FILE *fp_trace = fopen(trace_filepath, "r");
     if (!fp_trace) {
         printf("ERROR: Cannot open trace file: %s\n", trace_filepath);
@@ -60,7 +70,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
             my_cache.tag[index] = tag;
         }
 
-        // Access printout for debugging
+        // Access printout for debugging - Change to annotate new file
         access_num++;
         printf("Access: %d, Block: %d, Index: %d, Tag: %d ", access_num, block_number, index, tag);
         if (is_hit) {
