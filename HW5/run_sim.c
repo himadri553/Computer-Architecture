@@ -65,6 +65,11 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     int access_num = 0;
     bool is_hit;
 
+    /* Prepare annotated trace file */
+    char output_filename[128];
+    sprintf(output_filename, "./hw5_results/%s_%s_annotated.txt", trace_filepath, cache_map_type);
+    FILE *fp_annotated_trace = fopen(output_filename, "w");
+
     /* Run simulation */
     printf("Running simulation - %s\n", cache_map_type);
     while (fgets(trace_line, sizeof(trace_line), fp_trace)) {
@@ -205,7 +210,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
                     }
                 }
 
-                // 2. All lines valid → replace the GLOBAL LRU line
+                // 2. All lines valid replace the GLOBAL LRU line
                 if (placed == -1) {
                     // Find line with maximum LRU value
                     int lru_line = 0;
@@ -230,16 +235,12 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
             }
         }
 
-        // Access printout for debugging - Change to annotate new file
+        // Annotate trace file
         access_num++;
-        printf("Access: %d, Block: %d, Index: %d, Tag: %d ", access_num, block_number, cache_index, tag);
-        if (is_hit) {
-            printf("HIT");
-        }
-        else {
-            printf("MISS");
-        }
-        printf("\n");
+        const char *hm = is_hit ? "hit" : "miss";
+        fprintf(fp_annotated_trace,
+            "%c: %d -> %s (tag %d, index %d)\n",
+            op, addr, hm, tag, cache_index);
     }
     fclose(fp_trace);
 
