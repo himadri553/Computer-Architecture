@@ -30,12 +30,13 @@ int main() {
     counter_dm_smart = run_sim("dm", "./smart4-trace.txt");
     counter_twoway_native = run_sim("twoway", "./naive4-trace.txt");
     counter_twoway_smart = run_sim("twoway", "./smart4-trace.txt");
-    // counter_full_native = run_sim("full", "./naive4-trace.txt");   
-    // counter_full_smart = run_sim("full", "./smart4-trace.txt");
+    counter_full_native = run_sim("full", "./naive4-trace.txt");   
+    counter_full_smart = run_sim("full", "./smart4-trace.txt");
 
     /* Display table */ 
-    FILE *fp_results_table = fopen("hw5_results.txt", "w");
+    FILE *fp_results_table = fopen("./hw5_results/miss_table.txt", "w");
     fprintf(fp_results_table, "HW5 Simulation results - # of misses\n");
+
     fprintf(fp_results_table, "-----------------------------------------------------------\n");
     fprintf(fp_results_table, "%-25s %-15s %-15s\n", "", "Naive", "Smart");
     fprintf(fp_results_table, "-----------------------------------------------------------\n");
@@ -43,16 +44,19 @@ int main() {
         "Direct mapped",
         counter_dm_native,
         counter_dm_smart);  
+
     fprintf(fp_results_table, "-----------------------------------------------------------\n"); 
     fprintf(fp_results_table, "%-25s %-15d %-15d\n",
         "Two-way set associative",
         counter_twoway_native,
         counter_twoway_smart);
+
     fprintf(fp_results_table, "-----------------------------------------------------------\n"); 
     fprintf(fp_results_table, "%-25s %-15d %-15d\n",
         "Fully-associative",
         counter_full_native,
         counter_full_smart); 
+
     fclose(fp_results_table);
 
     return 0;

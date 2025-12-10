@@ -8,13 +8,8 @@
     - outputs # of misses
     - used for each file and sim type in main
 
-    sim_type logic:
-    |   Direct Mapped (DM)  |   Two-way set associative     |   Fully-associative
-    |
-
     TODO:
-    - add all cache types struct (or maybe make one that can be used for all?)
-    - integrated all other types of sim_type (see hsahas_stuff/hs5_brainstorm.txt)
+    - Annotate all trace lines with hit / miss and output them into ./hw5_results
 
 */
 #include <stdio.h>
@@ -22,15 +17,13 @@
 #include <string.h>
 #include "hw5.h"
 
-/* Sim variables */
-char op;
-int addr;
-int block_number;
-int cache_index;
-int tag;
-
 int run_sim(const char *cache_map_type, const char *trace_filepath) {
     /* Initalize counters, check cache type and get file */ 
+    char op;
+    int addr;
+    int block_number;
+    int cache_index;
+    int tag;
     int miss_counter = 0;
     if (strcmp(cache_map_type, "dm") != 0 && strcmp(cache_map_type, "twoway") != 0 && strcmp(cache_map_type, "full") != 0) {
         printf("ERROR: Unsupported cache mapping type: %s\n", cache_map_type);
@@ -75,14 +68,16 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
     /* Run simulation */
     printf("Running simulation - %s\n", cache_map_type);
     while (fgets(trace_line, sizeof(trace_line), fp_trace)) {
+        // reset per-access state
+        is_hit = false;
         
         /* Direct Mapped */
         if (strcmp(cache_map_type, "dm") == 0) {
             // Compute vars - DM
             sscanf(trace_line, " %c: %d", &op, &addr);
-            int block_number = addr / 2;
-            int cache_index = block_number % DM_CACHE_LINES;         
-            int tag = block_number / DM_CACHE_LINES;
+            block_number = addr / 2;
+            cache_index = block_number % DM_CACHE_LINES;         
+            tag = block_number / DM_CACHE_LINES;
 
             // Determine Hit or Miss - DM
             if (my_dm_cache.valid[cache_index] == 1 && my_dm_cache.tag[cache_index] == tag) {
@@ -101,10 +96,10 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
         else if (strcmp(cache_map_type, "twoway") == 0) {
             // Compute vars - twoway
             sscanf(trace_line, " %c: %d", &op, &addr);
-            int block_number = addr / 2;
+            block_number = addr / 2;
             int set = block_number % TWOWAY_SET;
-            int cache_index = block_number % DM_CACHE_LINES;         
-            int tag = block_number / TWOWAY_SET;
+            cache_index = set;         
+            tag = block_number / TWOWAY_SET;
             int hit_way = -1;
 
             /* Determine Hit */ 
@@ -127,7 +122,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
             if (!is_hit) {
                 miss_counter++;
 
-                // 1. Try to find an INVALID way first
+                // 1. Try to find an INVALID way
                 int replaced = -1;
                 for (int way = 0; way < TWOWAY_WAY; way++) {
                     if (my_twoway_cache.valid[set][way] == 0) {
@@ -144,7 +139,7 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
                     }
                 }
 
-                // 2. If both ways valid → use LRU replacement
+                // 2. use LRU replacement
                 if (replaced == -1) {
                     int lru_way = (my_twoway_cache.lru[set][0] == 1) ? 0 : 1;
 
@@ -154,6 +149,83 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
                     // This way becomes MRU
                     my_twoway_cache.lru[set][lru_way] = 0;
                     my_twoway_cache.lru[set][1 - lru_way] = 1;
+                }
+            }
+        }
+
+        /* Fully associtive */
+        else {
+            // Compute Vars - fully associtive
+            sscanf(trace_line, " %c: %d", &op, &addr);
+            block_number = addr / 2;
+            tag = block_number;
+            is_hit = false;
+            int hit_line = -1;
+
+            // Determine HIT
+            for (int line = 0; line < FULL_CACHE_LINES; line++) {
+                if (my_full_cache.valid[line] == 1 &&
+                    my_full_cache.tag[line] == tag) {
+                    is_hit = true;
+                    hit_line = line;
+
+                    // LRU update: this line becomes MRU
+                    for (int i = 0; i < FULL_CACHE_LINES; i++) {
+                        if (my_full_cache.lru[i] < my_full_cache.lru[line]) {
+                            my_full_cache.lru[i]++;
+                        }
+                    }
+                    my_full_cache.lru[line] = 0;
+
+                    break;
+                }
+            }
+
+            // Determine miss
+            if (!is_hit) {
+                miss_counter++;
+                int placed = -1;
+
+                // 1. Try to place in an invalid line first
+                for (int line = 0; line < FULL_CACHE_LINES; line++) {
+                    if (my_full_cache.valid[line] == 0) {
+                        my_full_cache.valid[line] = 1;
+                        my_full_cache.tag[line] = tag;
+
+                        // LRU update for insert: this becomes MRU
+                        for (int i = 0; i < FULL_CACHE_LINES; i++) {
+                            if (my_full_cache.lru[i] < my_full_cache.lru[line]) {
+                                my_full_cache.lru[i]++;
+                            }
+                        }
+                        my_full_cache.lru[line] = 0;
+
+                        placed = line;
+                        break;
+                    }
+                }
+
+                // 2. All lines valid → replace the GLOBAL LRU line
+                if (placed == -1) {
+                    // Find line with maximum LRU value
+                    int lru_line = 0;
+                    for (int line = 1; line < FULL_CACHE_LINES; line++) {
+                        if (my_full_cache.lru[line] > my_full_cache.lru[lru_line]) {
+                            lru_line = line;
+                        }
+                    }
+
+                    // Replace LRU line
+                    my_full_cache.valid[lru_line] = 1;
+                    my_full_cache.tag[lru_line] = tag;
+
+                    // LRU update: replaced line becomes MRU
+                    for (int i = 0; i < FULL_CACHE_LINES; i++) {
+                        if (my_full_cache.lru[i] < my_full_cache.lru[lru_line]) {
+                            my_full_cache.lru[i]++;
+                        }
+                    }
+                    my_full_cache.lru[lru_line] = 0;
                 }
             }
         }
@@ -173,4 +245,3 @@ int run_sim(const char *cache_map_type, const char *trace_filepath) {
 
     return miss_counter;
 }
-
